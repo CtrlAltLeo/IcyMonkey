@@ -34,6 +34,8 @@ function _init()
 	add_inv(10)
 	
 	add_mob(1,25,25)
+	
+
 end
 
 
