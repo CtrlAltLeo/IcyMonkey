@@ -9,12 +9,21 @@ __lua__
 		the ghost of christmas past
 		relight some fires
 		x amount of days
-		
+
+	todo:
+		tents should only work
+		dusk and beyond
+		story mechanics
+
+	crafting complexity
+	passive health regen
+
+--vaulting, i want to finish lamo		
 	guns
 	snake boss?
 
-	-snowmen are break
-	-improve projectiles
+
+
 	
 
 --]]
@@ -31,11 +40,11 @@ function _init()
 	sfx(2) //starting wind
 	reset_game()
 	
-	add_mob(1,25,25)
+	--add_mob(1,25,25)
 	
+	add_inv(1)
+	add_inv(2)
 	
-	msg("balls",3)
-		msg("balls",3)	msg("balls",3)
 
 end
 
@@ -72,6 +81,7 @@ function _update()
 	 get_player_input()
 	 move_player()
 	 lose_heat()
+	 passive_hp_regen()
 	 player_death()
 	 nearest_pl_obj()
 	 stats_reg()
@@ -154,7 +164,6 @@ function _draw()
 	
 	
 	draw_msg()
-	
 	
 	
 end
@@ -532,6 +541,13 @@ function lose_heat()
 	
 end
 
+function passive_hp_regen()
+	
+	if time() % 10 == 0 then
+		pl.hp += 1
+	end
+	
+end
 
 //keeps player stats below 
 //their max
@@ -731,6 +747,24 @@ function get_all(table, value)
 	
 end
 
+function get_all_inv(value)
+	
+	t={}
+	
+	for i = 1, #inv do
+		
+		if inv[i]== value then
+			add(t, inv[i])
+		end
+		
+	end
+	
+	
+	return t
+	
+end
+
+
 
 -->8
 --particle system
@@ -813,29 +847,38 @@ res = {}
 //ico inventory
 //also contains crafting 
 //craft{} is materials needed
+
+--[[
+cost change: 
+cost is now [item,#]
+for all items. annoying af
+but it'll get the job done
+
+--]]
+
 res_types = {
 			//1
 			
 			{s=74,dur=10,ico=17,name="log",t=1},//tree
 			{s=75,dur=10,ico=18,name="stone",t=1},//stone
-			{s=nil,dur=nil,ico=19,cost={1},name="charcoal",t=1},//coal
-   {s=nil,dur=nil,ico=20,cost={1,2},name="spear",t=2},//spear
+			{s=nil,dur=nil,ico=19,cost={{t=1,am=1}},name="charcoal",t=1},//coal
+   {s=nil,dur=nil,ico=20,cost={ {t=1,am=2}, {t=2,am=1}},name="spear",t=2},//spear
 			{s=76,dur=5,ico=21,name="flint",t=1}, //flint,
 			//6
-			{s=22,dur=100,ico=22,cost={1,2,5},name="firewood",t=3},//firewood
+			{s=22,dur=100,ico=22,cost={{t=1,am=1},{t=2,am=1},{t=5,am=1}},name="firewood",t=3},//firewood
 			{ico=30}, //ui item, equip item
 			{ico=31}, //ui item, destory item
-			{s=23,dur=5,ico=23,name="torch",t=3,cost={1,3}},
+			{s=23,dur=5,ico=23,name="torch",t=3,cost={{t=1,am=1},{t=3,am=1}}},
 			{s=65,dur =10, ico=37,name="snowball", t=5},//wall, placeable
 			//11
 			{s=33,dur=1,ico=33,name="raw meat",t=4},
 			{ico=5},//ui item, eat
-			{ico=5,dur=1,name="cooked meat",cost={11},t=4},
+			{ico=5,dur=1,name="cooked meat",cost={{t=11,am=1}},t=4},
 			{ico=42,name="start"}, //ui item, start
 			{ico=43,name="compass"}, //ui for compass
 			//16
 			{ico=34,name="fur",t=1}, //fur
-			{ico=35,name="tent",s=35,dur=15,cost={16,1,5},t=3},
+			{ico=35,name="tent",s=35,dur=15,cost={{t=16,am=2},{t=1,am=2},{t=5,am=1}},t=3},
 			{ico=46}//throw ui element
 
 }
@@ -1226,9 +1269,14 @@ function draw_crafting()
 	
 	
 	//prints cost
-	for i = 1,#item.cost do
-		spr(res_types[item.cost[i]].ico
-		,26+i*10+camx,26+camy)
+	c = 1
+	for i in all(item.cost) do
+		for am = 1,i.am do
+			spr(res_types[i.t].ico
+			,26+c*10+camx,26+camy)
+			c += 1
+		end
+		
 	end
 	
 end
@@ -1350,7 +1398,9 @@ function has_materials(item)
 	
 	for c in all(item.cost) do
 		
-		if not has_item(c) then 
+		pl_am = #get_all_inv(c.t)
+		
+		if pl_am < c.am then
 			return false
 		end
 		
@@ -1363,7 +1413,7 @@ end
 function pay_craft_cost(item)
 	for c in all(item.cost) do
 		
-		rm_inv(c)
+		rm_inv(c.t)
 		
 	end
 end
@@ -1946,6 +1996,9 @@ function draw_ghost()
 
 	end
 end
+-->8
+--plane and signal fires
+
 __gfx__
 00000000000000000000000000177700000000000000240000028e00000000000000000000000000000000000077d0000077d0000077d0000001100077000077
 000000000017770000177700017fff70001777000002ee4002888e000000000000000000000000000008200007cc7d0007cc7d0007cc7d000018810070000007
@@ -1965,11 +2018,11 @@ __gfx__
 000000000044400000000000000111004f00000000000000000000000002000000000000000000000a000a000505050004004404000000000077770000777700
 0000000000002e000000000000000000000000550000000000000000000000000000000000000000000000000005550000000000000000000000000000000000
 002ee8000002eee000776000000000000000055600000000000000000000000000000000004444003777700000566650000e0000000000000007770000000000
-02eeee800002e7e007e7760000544f0000005560001670000000000000000000000000000549a4403bbbb7700561116500e80000000000000078887000000000
-02eeee80002eeee007eee7700544f2f0055556000177c7000000000000000000000000000119a1103bbbbbb7051118150e888888000000000787778700000000
-2e1111e8002eee0007eee7700544f2f000d56000017c7700000000000000000000000000011111103bbbbbb10511811508888888000000000787878700000000
-21111118077ee00007ee7760544f222f0d44000001777700000000000000000000000000054444403bbbb1100651115602882222000000000787778700000000
-000000007770000006776600544f222fd44000000066600000000000000000000000000005444440111110000065556000280000000000000078887000000000
+02eeee800002e7e007e7760000544f0000005560001670000022fd0000000000000000000549a4403bbbb7700561116500e80000000000000078887000000000
+02eeee80002eeee007eee7700544f2f0055556000177c7000044af0000000000000000000119a1103bbbbbb7051118150e888888000000000787778700000000
+2e1111e8002eee0007eee7700544f2f000d56000017c7700022222af0000000000000000011111103bbbbbb10511811508888888000000000787878700000000
+21111118077ee00007ee7760544f222f0d44000001777700244fa4fd0000000000000000054444403bbbb1100651115602882222000000000787778700000000
+000000007770000006776600544f222fd440000000666000244fd000000000000000000005444440111110000065556000280000000000000078887000000000
 00000000070000000000000000000000d44000000000000000000000000000000000000005444440000000000006660000020000000000000007770000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
