@@ -368,6 +368,13 @@ function harvest()
 		
 		if r != false then
 	
+			if #inv == 18 then
+				if #msg_queue < 2 then
+					msg("you're carrying too much!",3)	
+				end
+				return
+			end
+	
 	  if dist(pl.x,pl.y,r.x,r.y)
 		< 15 then
 			
