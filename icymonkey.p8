@@ -921,8 +921,7 @@ but it'll get the job done
 
 res_types = {
 			//1
-			
-			{s=74,dur=10,ico=17,name="log",t=1},//tree
+			{s=74,dur=10,ico=17,name="log",t=1,cost={{t=1,am=1}}},//tree
 			{s=75,dur=10,ico=18,name="stone",t=1,cost={{t=5,am=2}}},//stone
 			{s=nil,dur=nil,ico=19,cost={{t=1,am=1}},name="charcoal",t=1},//coal
    {s=nil,dur=nil,ico=20,cost={ {t=1,am=2}, {t=5,am=1}},name="spear",t=2},//spear
@@ -1332,7 +1331,7 @@ function menu_reset()
 	menu_mode = 0
 	cx,cy = -10+camx,99+camy
 	cvx,cvy = 0,0
-	nodes = choice_menu(1,99,9,2,inv)
+ nodes = choice_menu(1,99,9,2,inv)
 end
 
 
