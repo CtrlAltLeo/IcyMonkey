@@ -29,6 +29,7 @@ gamemode = 2 //0 is main, 1 is
 
 function _init()
 	
+	
 	gamemode = 5
 	
 	reset_game()
@@ -184,6 +185,7 @@ function reset_game()
 	
 	pl.hp = 10
 	pl.warmth = 100
+	pl.item=-1
 	inv = {}
 	
 	camx = 0
@@ -197,8 +199,13 @@ function reset_game()
 	
 	msg_text = ""
 	
+	hour = 0
+	day = 0
+	
+	
 end
 -->8
+
 --player
 pl = {x=63,
 						y=63,
@@ -555,6 +562,7 @@ function lose_heat()
 	end
 	
 	fires = get_all(res,6)
+	
 		
 		close = get_closest(fires,pl.x,pl.y)
 		
@@ -563,8 +571,8 @@ function lose_heat()
 			if dist(pl.x,pl.y,close.x,close.y)
 				< 30 then
 					
-					pl.warmth += 1
-					
+					pl.warmth += .5
+					passive_hp_regen()
 			end
 		
 		end
@@ -581,7 +589,7 @@ end
 
 function passive_hp_regen()
 	
-	if time() % 10 == 0 then
+	if time() % 5 == 0 then
 		pl.hp += 1
 	end
 	
@@ -925,21 +933,21 @@ res_types = {
 			{s=75,dur=10,ico=18,name="stone",t=1,cost={{t=5,am=2}}},//stone
 			{s=nil,dur=nil,ico=19,cost={{t=1,am=1}},name="charcoal",t=1},//coal
    {s=nil,dur=nil,ico=20,cost={ {t=1,am=2}, {t=5,am=1}},name="spear",t=2},//spear
-			{s=76,dur=5,ico=21,name="flint",t=1}, //flint,
+			{s=76,dur=5,ico=21,name="flint",t=1,cost={{t=1,am=1}}}, //flint,
 			//6
-			{s=22,dur=100,ico=22,cost={{t=1,am=1},{t=2,am=1},{t=5,am=1}},name="firewood",t=3},//firewood
+			{s=22,dur=8,ico=22,cost={{t=1,am=1},{t=2,am=1},{t=5,am=1}},name="campfire",t=3},//firewood
 			{ico=30}, //ui item, equip item
 			{ico=31}, //ui item, destory item
 			{s=23,dur=5,ico=23,name="torch",t=3,cost={{t=1,am=1},{t=3,am=1}}},
 			{s=65,dur =10, ico=37,name="snowball", t=5},//wall, placeable
 			//11
-			{s=33,dur=1,ico=33,name="raw meat",t=4},
+			{s=33,dur=1,ico=33,name="raw meat",t=4,cost={{t=1,am=1}}},
 			{ico=5},//ui item, eat
 			{ico=5,dur=1,name="cooked meat",cost={{t=11,am=1}},t=4},
 			{ico=42,name="start"}, //ui item, start
 			{ico=43,name="compass"}, //ui for compass
 			//16
-			{ico=34,name="fur",t=1}, //fur
+			{ico=34,name="fur",t=1,cost={{t=1,am=1}}}, //fur
 			{ico=35,name="tent",s=35,dur=15,cost={{t=16,am=2},{t=1,am=2},{t=5,am=1}},t=3},
 			{ico=46},//throw ui element
 			{s=38,ico=38,name="log bundle",t=3,cost={{t=1,am=3}},dur=5},
@@ -1263,12 +1271,14 @@ function get_menu_input()
 				if nodes[node].v == 8 then
 					rm_inv(sub_menu_item)
 					menu_reset()
+					return
 				end
 				
 				if nodes[node].v == 12 then
 					rm_inv(sub_menu_item)
 					pl.hp += 2
 					menu_reset()
+					return
 				end
 				
 				if nodes[node].v == 18 then
@@ -1504,7 +1514,7 @@ function craftable()
 	
 	craft = {2,4,6,17,19, 20,21} //
 	
-	if pl.closest_obj.name == "firewood"
+	if pl.closest_obj.name == "campfire"
 		then
 			add(craft, 13) //cooked meat
 			add(craft,3) //charcoal
@@ -1597,8 +1607,10 @@ function rnd_mobs()
 		
 		if time() % 15 == 0 then
 			
-			add_mob(2,pl.x + rnd(256)-128,pl.y + rnd(256)-128)
-
+			add_mob(2,pl.x + rnd(256)-128,pl.y + rnd(256)-128)		
+		end
+		
+		if time() % 20 == 0 then
 			add_mob(1,pl.x + rnd(256)-128,pl.y + rnd(256)-128)			
 		end
 		
@@ -1614,10 +1626,10 @@ mobs = {}
 all_mobs = {
 
 //yeti
-{hp=5,s=11,brain=0,dmg=2,drops={16}},
+{hp=3,s=11,brain=0,dmg=2,drops={16}},
 
 //goat
-{hp=4,s=27,brain=1,dmg=0,drops={11}}	
+{hp=2,s=27,brain=1,dmg=0,drops={11}}	
 ,
 
 //blood bird
@@ -1763,8 +1775,8 @@ function mob_chase(m, target, fov)
 	
 			if p_dist < fov then
 				
-					m.x = m.x + (target.x-m.x)*.05
-					m.y = m.y + (target.y-m.y)*.05
+					m.x = m.x + (target.x-m.x)*.04
+					m.y = m.y + (target.y-m.y)*.04
 				
 					if p_dist < 10 then
 						attack(m,target)
@@ -1784,8 +1796,8 @@ function flee_player(m)
 	
 	if p_dist < 20 then
 		
-		m.x = m.x + -(pl.x -m.x)*.04
-		m.y = m.y + -(pl.y-m.y)*.04
+		m.x = m.x + -(pl.x -m.x)*.02
+		m.y = m.y + -(pl.y-m.y)*.02
 		
 		return true
 	
